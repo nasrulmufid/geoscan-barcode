@@ -1,0 +1,13 @@
+services:
+  geoscan:
+    build: .
+    image: geoscan-barcode:latest
+    container_name: geoscan-barcode
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3001}:3001"
+    volumes:
+      - geoscan-data:/app/data
+
+volumes:
+  geoscan-data:
