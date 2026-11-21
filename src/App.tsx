@@ -5,6 +5,7 @@ import {
   Download,
   History,
   ImageUp,
+  Keyboard,
   Loader2,
   LocateFixed,
   MapPin,
@@ -117,9 +118,32 @@ export default function App() {
                   <TabsTrigger value="upload">
                     <ImageUp /> Upload
                   </TabsTrigger>
+                  <TabsTrigger value="manual">
+                    <Keyboard /> Manual
+                  </TabsTrigger>
                 </TabsList>
                 <TabsContent value="camera">
                   {mode === 'camera' && <CameraScanner onDetect={(d) => onDetect(d, 'camera')} />}
+                </TabsContent>
+                <TabsContent value="manual">
+                  <Card>
+                    <CardContent className="space-y-3">
+                      <p className="text-muted-foreground text-sm">
+                        Ketik serial number secara manual tanpa scan. Lokasi GPS tetap dicatat otomatis.
+                      </p>
+                      <Button
+                        size="lg"
+                        className="w-full"
+                        onClick={() => {
+                          setResult({ text: '', format: 'MANUAL', source: 'manual' })
+                          setBarcode('')
+                          gps.refresh()
+                        }}
+                      >
+                        <Keyboard /> Input Manual
+                      </Button>
+                    </CardContent>
+                  </Card>
                 </TabsContent>
                 <TabsContent value="upload">
                   <ImageScanner onDetect={(d) => onDetect(d, 'upload')} />
@@ -130,13 +154,18 @@ export default function App() {
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     Hasil Scan
-                    <Badge>{result.format}</Badge>
+                    {result.format !== 'MANUAL' && <Badge>{result.format}</Badge>}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="barcode">Kode barcode</Label>
-                    <Input id="barcode" value={barcode} onChange={(e) => setBarcode(e.target.value)} className="font-mono" />
+                    <Label htmlFor="barcode">Serial Number</Label>
+                    <Input id="barcode" value={barcode} onChange={(e) => setBarcode(e.target.value)} className="font-mono"
+                      autoFocus={result.source === 'manual'}
+                      autoCapitalize="characters"
+                      autoComplete="off"
+                      placeholder="Scan atau ketik serial number"
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="note">Catatan (opsional)</Label>
@@ -184,8 +213,6 @@ export default function App() {
                     </Button>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    {s.format && <Badge>{s.format}</Badge>}
-                    {s.source && <Badge>{s.source === 'camera' ? 'Kamera' : 'Upload'}</Badge>}
                   </div>
                   {s.latitude !== null && s.longitude !== null ? (
                     <a

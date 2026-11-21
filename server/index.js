@@ -23,6 +23,12 @@ db.exec(`
   );
 `)
 
+// Migrasi: serial_number lama digabung ke kolom barcode (keduanya sama)
+const cols0 = db.prepare('PRAGMA table_info(scans)').all().map((c) => c.name)
+if (cols0.includes('serial_number')) {
+  db.exec("UPDATE scans SET barcode = serial_number WHERE (barcode IS NULL OR barcode = '') AND serial_number IS NOT NULL")
+}
+
 const app = express()
 app.use(express.json({ limit: '1mb' }))
 
@@ -31,9 +37,9 @@ app.get('/api/scans', (_req, res) => {
 })
 
 app.post('/api/scans', (req, res) => {
-  const { barcode, format, latitude, longitude, accuracy, note, source, scanned_at } = req.body ?? {}
-  if (!barcode || typeof barcode !== 'string') {
-    return res.status(400).json({ error: 'barcode wajib diisi' })
+  const { barcode = '', format, latitude, longitude, accuracy, note, source, scanned_at } = req.body ?? {}
+  if (typeof barcode !== 'string' || !barcode.trim()) {
+    return res.status(400).json({ error: 'serial number wajib diisi' })
   }
   const num = (v) => (v === null || v === undefined || v === '' || Number.isNaN(Number(v)) ? null : Number(v))
   const info = db
